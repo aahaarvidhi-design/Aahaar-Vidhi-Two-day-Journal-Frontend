@@ -1,12 +1,11 @@
 import {
   Link,
-  useLocation
 } from "react-router-dom";
 
 const BottomNavigation = () => {
 
-  const location =
-    useLocation();
+  // const location =
+  //   useLocation();
 
   return (
 
