@@ -1,162 +1,84 @@
-import {
-  useEffect,
-  useState
-} from "react";
-
-import AdminSidebar
-from "../../components/common/AdminSidebar";
-
-import {
-  getStudyResponses
-} from "../../api/adminApi";
+import { useEffect, useState } from "react";
+import AdminSidebar from "../../components/common/AdminSidebar";
+import { getStudyResponses } from "../../api/adminApi";
+import adminStyles from "./adminStyles";
 
 const StudyResponses = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [data,setData] =
-    useState([]);
+  useEffect(() => { loadResponses(); }, []);
 
-  useEffect(() => {
-
-    loadResponses();
-
-  }, []);
-
-  const loadResponses =
-    async () => {
-
-      const res =
-        await getStudyResponses();
-
-      setData(
-        res.data
-      );
-    };
+  const loadResponses = async () => {
+    try {
+      const res = await getStudyResponses();
+      setData(res.data);
+    } catch {}
+    finally { setLoading(false); }
+  };
 
   return (
+    <>
+      <style>{adminStyles}</style>
+      <div className="admin-root">
+        <AdminSidebar active="studyresponses" />
 
-    <div className="container-fluid">
+        <main className="admin-main">
+          <div className="page-header">
+            <h1 className="page-title">Study Responses</h1>
+            <p className="page-subtitle">User participation and journal completion status</p>
+          </div>
 
-      <div className="row">
-
-        <div className="col-md-2">
-          <AdminSidebar />
-        </div>
-
-        <div className="col-md-10">
-
-          <h2 className="mt-3">
-            Study Responses
-          </h2>
-
-          <table
-            className="table table-bordered mt-4"
-          >
-
-            <thead>
-
-              <tr>
-
-                <th>Name</th>
-
-                <th>Email</th>
-
-                <th>Primary Constitution</th>
-
-                <th>Secondary Constitution</th>
-
-                <th>Journal Entries</th>
-
-                <th>Status</th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {
-                data.map(
-                  item => (
-
-                    <tr
-                      key={
-                        item.user._id
-                      }
-                    >
-
+          <div className="panel">
+            <div className="panel-header">
+              <span className="panel-title">All responses ({data.length})</span>
+            </div>
+            {loading ? (
+              <p className="state-text">Loading…</p>
+            ) : data.length === 0 ? (
+              <p className="state-text">No responses yet.</p>
+            ) : (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Primary</th>
+                    <th>Secondary</th>
+                    <th style={{ width: 110 }}>Journal entries</th>
+                    <th style={{ width: 110 }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((item) => (
+                    <tr key={item.user._id}>
+                      <td>{item.user.name}</td>
+                      <td style={{ color: "#9A8070" }}>{item.user.email}</td>
                       <td>
-                        {
-                          item.user.name
-                        }
+                        {item.assessment?.primary
+                          ? <span className={`badge badge-${item.assessment.primary.toLowerCase()}`}>{item.assessment.primary}</span>
+                          : <span style={{ color: "#C0A88A" }}>—</span>}
                       </td>
-
                       <td>
-                        {
-                          item.user.email
-                        }
+                        {item.assessment?.secondary
+                          ? <span className={`badge badge-${item.assessment.secondary.toLowerCase()}`}>{item.assessment.secondary}</span>
+                          : <span style={{ color: "#C0A88A" }}>—</span>}
                       </td>
-
+                      <td style={{ textAlign: "center" }}>{item.journal_count}</td>
                       <td>
-                        {
-                          item.assessment?.primary ||
-                          "-"
-                        }
+                        {item.journal_count >= 2
+                          ? <span className="badge badge-success">Completed</span>
+                          : <span className="badge badge-warning">Pending</span>}
                       </td>
-
-                      <td>
-                        {
-                          item.assessment?.secondary ||
-                          "-"
-                        }
-                      </td>
-
-                      <td>
-                        {
-                          item.journal_count
-                        }
-                      </td>
-
-                      <td>
-
-                        {
-                          item.journal_count >= 2 ?
-
-                          (
-                            <span
-                              className="badge bg-success"
-                            >
-                              Completed
-                            </span>
-                          )
-
-                          :
-
-                          (
-                            <span
-                              className="badge bg-warning"
-                            >
-                              Pending
-                            </span>
-                          )
-                        }
-
-                      </td>
-
                     </tr>
-
-                  )
-                )
-              }
-
-            </tbody>
-
-          </table>
-
-        </div>
-
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </main>
       </div>
-
-    </div>
+    </>
   );
 };
 

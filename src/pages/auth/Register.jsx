@@ -1,169 +1,528 @@
-import {
-  useState
-} from "react";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { registerUser } from "../../api/authApi";
 
-import {
-  useNavigate
-} from "react-router-dom";
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap');
 
-import {
-  registerUser
-} from "../../api/authApi";
+  .auth-root {
+    min-height: 100vh;
+    display: flex;
+    background: #F7F3EE;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .auth-left {
+    width: 420px;
+    flex-shrink: 0;
+    background: #1E110A;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .auth-left-blob1 {
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: #6B3A1F;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .auth-left-blob2 {
+    position: absolute;
+    bottom: -60px; left: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: #C9902A;
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: #C9902A;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #F5E6C8;
+    letter-spacing: 0.5px;
+  }
+
+  .left-body {
+    position: relative;
+    z-index: 1;
+  }
+
+  .left-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 500;
+    color: #F5E6C8;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+
+  .left-sub {
+    font-size: 14px;
+    font-weight: 300;
+    color: #9A7A5A;
+    line-height: 1.65;
+  }
+
+  .dosha-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  .dosha-chip {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 400;
+    border: 0.5px solid;
+    letter-spacing: 0.2px;
+  }
+
+  .chip-vata { background: rgba(100,140,220,0.12); color: #8FAED4; border-color: rgba(100,140,220,0.25); }
+  .chip-pitta { background: rgba(210,100,45,0.12); color: #D4957A; border-color: rgba(210,100,45,0.25); }
+  .chip-kapha { background: rgba(70,160,120,0.12); color: #6BB89A; border-color: rgba(70,160,120,0.25); }
+
+  .auth-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  .auth-box {
+    width: 100%;
+    max-width: 420px;
+    padding: 2rem 0;
+  }
+
+  .auth-box-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 500;
+    color: #1E110A;
+    margin-bottom: 4px;
+  }
+
+  .auth-box-sub {
+    font-size: 13px;
+    font-weight: 300;
+    color: #9A8070;
+    margin-bottom: 24px;
+  }
+
+  .error-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #FEF0F0;
+    border: 0.5px solid #F5BABA;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #A03030;
+    margin-bottom: 16px;
+  }
+
+  .success-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #F0FAF4;
+    border: 0.5px solid #A8DDB8;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #276040;
+    margin-bottom: 16px;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field-full {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  .field-half {
+    margin-bottom: 0;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #9A8070;
+    margin-bottom: 6px;
+  }
+
+  .field-wrap {
+    position: relative;
+  }
+
+  .field-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    color: #C0A88A;
+    pointer-events: none;
+  }
+
+  .field-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px 0 36px;
+    border: 1px solid #E0D4C4;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: #1E110A;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .field-input:focus {
+    border-color: #C9902A;
+    box-shadow: 0 0 0 3px rgba(201,144,42,0.12);
+  }
+
+  .field-select {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px 0 36px;
+    border: 1px solid #E0D4C4;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: #1E110A;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .field-select:focus {
+    border-color: #C9902A;
+    box-shadow: 0 0 0 3px rgba(201,144,42,0.12);
+  }
+
+  .eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    color: #C0A88A;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .submit-btn {
+    width: 100%;
+    height: 46px;
+    border-radius: 8px;
+    border: none;
+    background: #1E110A;
+    color: #F5E6C8;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.2px;
+  }
+
+  .submit-btn:hover { background: #3A2010; }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .form-footer {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 300;
+    color: #9A8070;
+  }
+
+  .form-link {
+    color: #C9902A;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .form-link:hover { text-decoration: underline; }
+
+  @media (max-width: 700px) {
+    .auth-left { display: none; }
+    .auth-root { background: #fff; }
+    .field-grid { grid-template-columns: 1fr; }
+  }
+`;
 
 const Register = () => {
+  const navigate = useNavigate();
 
-  const navigate =
-    useNavigate();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    age: "",
+    gender: "",
+    phone: "",
+    city: "",
+  });
 
-  const [form,setForm] =
-    useState({
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-      name:"",
-      email:"",
-      password:"",
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) setError("");
+  };
 
-      age:"",
-      gender:"",
-      phone:"",
-      city:""
-    });
-
-  const handleChange =
-    (e) => {
-
-      setForm({
-        ...form,
-        [e.target.name]:
-        e.target.value
-      });
-    };
-
-  const handleSubmit =
-    async (e) => {
-
-      e.preventDefault();
-
-      try {
-
-        await registerUser(
-          form
-        );
-
-        alert(
-          "Registration successful"
-        );
-
-        navigate(
-          "/login"
-        );
-
-      } catch {
-
-        alert(
-          "Registration failed"
-        );
-      }
-    };
+  const handleSubmit = async () => {
+    if (!form.name || !form.email || !form.password) {
+      setError("Name, email, and password are required.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await registerUser(form);
+      setSuccess(true);
+      setTimeout(() => navigate("/login"), 1500);
+    } catch {
+      setError("Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
+    <>
+      <style>{styles}</style>
+      <div className="auth-root">
+        <div className="auth-left">
+          <div className="auth-left-blob1" />
+          <div className="auth-left-blob2" />
 
-    <div className="container">
-
-      <div
-        className="row justify-content-center mt-4"
-      >
-
-        <div
-          className="col-md-6"
-        >
-
-          <div
-            className="card shadow"
-          >
-
-            <div
-              className="card-body"
-            >
-
-              <h2
-                className="text-center mb-4"
-              >
-                Register
-              </h2>
-
-              <form
-                onSubmit={
-                  handleSubmit
-                }
-              >
-
-                <input
-                  className="form-control mb-2"
-                  name="name"
-                  placeholder="Name"
-                  onChange={handleChange}
-                />
-
-                <input
-                  className="form-control mb-2"
-                  name="email"
-                  placeholder="Email"
-                  onChange={handleChange}
-                />
-
-                <input
-                  type="password"
-                  className="form-control mb-2"
-                  name="password"
-                  placeholder="Password"
-                  onChange={handleChange}
-                />
-
-                <input
-                  className="form-control mb-2"
-                  name="age"
-                  placeholder="Age"
-                  onChange={handleChange}
-                />
-
-                <input
-                  className="form-control mb-2"
-                  name="gender"
-                  placeholder="Gender"
-                  onChange={handleChange}
-                />
-
-                <input
-                  className="form-control mb-2"
-                  name="phone"
-                  placeholder="Phone"
-                  onChange={handleChange}
-                />
-
-                <input
-                  className="form-control mb-3"
-                  name="city"
-                  placeholder="City"
-                  onChange={handleChange}
-                />
-
-                <button
-                  className="btn btn-success w-100"
-                >
-                  Register
-                </button>
-
-              </form>
-
-            </div>
-
+          <div className="brand">
+            <div className="brand-icon">🌿</div>
+            <span className="brand-name">Prakriti</span>
           </div>
 
+          <div className="left-body">
+            <p className="left-heading">Begin your journey to self-discovery</p>
+            <p className="left-sub">
+              Answer a few questions to reveal your unique Ayurvedic constitution
+              and receive guidance tailored just for you.
+            </p>
+          </div>
+
+          <div className="dosha-row">
+            <span className="dosha-chip chip-vata">🌬 Vata</span>
+            <span className="dosha-chip chip-pitta">🔥 Pitta</span>
+            <span className="dosha-chip chip-kapha">💧 Kapha</span>
+          </div>
         </div>
 
-      </div>
+        <div className="auth-right">
+          <div className="auth-box">
+            <p className="auth-box-title">Create your account</p>
+            <p className="auth-box-sub">Start your Prakriti journey today</p>
 
-    </div>
+            {error && <div className="error-box">⚠ {error}</div>}
+            {success && <div className="success-box">✓ Account created! Redirecting…</div>}
+
+            <div className="field">
+              <label className="field-label">Full name</label>
+              <div className="field-wrap">
+                <span className="field-icon">👤</span>
+                <input
+                  type="text"
+                  name="name"
+                  className="field-input"
+                  placeholder="Arjun Sharma"
+                  value={form.name}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="field-label">Email</label>
+              <div className="field-wrap">
+                <span className="field-icon">✉</span>
+                <input
+                  type="email"
+                  name="email"
+                  className="field-input"
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="field-label">Password</label>
+              <div className="field-wrap">
+                <span className="field-icon">🔒</span>
+                <input
+                  type={showPass ? "text" : "password"}
+                  name="password"
+                  className="field-input"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={handleChange}
+                />
+                <button
+                  className="eye-btn"
+                  onClick={() => setShowPass((p) => !p)}
+                  aria-label={showPass ? "Hide password" : "Show password"}
+                  type="button"
+                >
+                  {showPass ? "🙈" : "👁"}
+                </button>
+              </div>
+            </div>
+
+            <div className="field-grid">
+              <div className="field-half">
+                <label className="field-label">Age</label>
+                <div className="field-wrap">
+                  <span className="field-icon">🎂</span>
+                  <input
+                    type="number"
+                    name="age"
+                    className="field-input"
+                    placeholder="28"
+                    min="1"
+                    max="120"
+                    value={form.age}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div className="field-half">
+                <label className="field-label">Gender</label>
+                <div className="field-wrap">
+                  <span className="field-icon">⚧</span>
+                  <select
+                    name="gender"
+                    className="field-select"
+                    value={form.gender}
+                    onChange={handleChange}
+                  >
+                    <option value="" disabled>Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="non-binary">Non-binary</option>
+                    <option value="prefer_not">Prefer not to say</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="field-half">
+                <label className="field-label">Phone</label>
+                <div className="field-wrap">
+                  <span className="field-icon">📞</span>
+                  <input
+                    type="tel"
+                    name="phone"
+                    className="field-input"
+                    placeholder="+91 98765…"
+                    value={form.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div className="field-half">
+                <label className="field-label">City</label>
+                <div className="field-wrap">
+                  <span className="field-icon">📍</span>
+                  <input
+                    type="text"
+                    name="city"
+                    className="field-input"
+                    placeholder="Hyderabad"
+                    value={form.city}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              className="submit-btn"
+              onClick={handleSubmit}
+              disabled={loading || success}
+            >
+              {loading ? "Creating account…" : "Create account →"}
+            </button>
+
+            <p className="form-footer">
+              Already have an account?{" "}
+              <Link to="/login" className="form-link">Sign in</Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

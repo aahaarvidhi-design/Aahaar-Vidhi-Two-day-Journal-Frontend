@@ -1,206 +1,140 @@
 import { useEffect, useState } from "react";
+import AdminSidebar from "../../components/common/AdminSidebar";
+import { getJournals, createJournal } from "../../api/adminApi";
+import adminStyles from "./adminStyles";
 
-import AdminSidebar
-from "../../components/common/AdminSidebar";
-
-import {
-  getJournals,
-  createJournal
-} from "../../api/adminApi";
+const Toast = ({ msg, type, onDone }) => {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  }, []);
+  return <div className={`toast-bar toast-${type}`}>{msg}</div>;
+};
 
 const Journals = () => {
+  const [journals, setJournals] = useState([]);
+  const [form, setForm] = useState({ journal_name: "", journal_date: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
 
-  const [journals,setJournals] =
-    useState([]);
+  useEffect(() => { loadJournals(); }, []);
 
-  const [form,setForm] =
-    useState({
-      journal_name:"",
-      journal_date:""
-    });
+  const loadJournals = async () => {
+    try {
+      const res = await getJournals();
+      setJournals(res.data);
+    } catch {}
+  };
 
-  useEffect(() => {
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-    loadJournals();
-
-  }, []);
-
-  const loadJournals =
-    async () => {
-
-      const res =
-        await getJournals();
-
-      setJournals(
-        res.data
-      );
-    };
-
-  const handleChange =
-    (e) => {
-
-      setForm({
-        ...form,
-        [e.target.name]:
-        e.target.value
-      });
-    };
-
-  const handleSubmit =
-    async (e) => {
-
-      e.preventDefault();
-
-      await createJournal(
-        form
-      );
-
-      setForm({
-        journal_name:"",
-        journal_date:""
-      });
-
+  const handleSubmit = async () => {
+    if (!form.journal_name || !form.journal_date) return;
+    setSubmitting(true);
+    try {
+      await createJournal(form);
+      setForm({ journal_name: "", journal_date: "" });
       loadJournals();
-    };
+      setToast({ msg: "Journal created", type: "success" });
+    } catch {
+      setToast({ msg: "Failed to create journal", type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatDate = (raw) => {
+    if (!raw) return "—";
+    const d = new Date(raw);
+    return isNaN(d) ? raw : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  };
 
   return (
+    <>
+      <style>{adminStyles}</style>
+      <div className="admin-root">
+        <AdminSidebar active="journals" />
 
-    <div className="container-fluid">
+        <main className="admin-main">
+          <div className="page-header">
+            <h1 className="page-title">Journals</h1>
+            <p className="page-subtitle">Create and manage daily journal entries</p>
+          </div>
 
-      <div className="row">
-
-        <div className="col-md-2">
-          <AdminSidebar />
-        </div>
-
-        <div className="col-md-10">
-
-          <h2 className="mt-3">
-            Journals
-          </h2>
-
-          <div className="card">
-
-            <div className="card-body">
-
-              <form
-                onSubmit={
-                  handleSubmit
-                }
-              >
-
-                <div className="row">
-
-                  <div className="col-md-5">
-
-                    <input
-                      className="form-control"
-                      name="journal_name"
-                      placeholder="Journal Name"
-                      value={
-                        form.journal_name
-                      }
-                      onChange={
-                        handleChange
-                      }
-                    />
-
-                  </div>
-
-                  <div className="col-md-4">
-
-                    <input
-                      type="date"
-                      className="form-control"
-                      name="journal_date"
-                      value={
-                        form.journal_date
-                      }
-                      onChange={
-                        handleChange
-                      }
-                    />
-
-                  </div>
-
-                  <div className="col-md-3">
-
-                    <button
-                      className="btn btn-success w-100"
-                    >
-                      Create Journal
-                    </button>
-
-                  </div>
-
+          {/* Create form */}
+          <div className="panel" style={{ marginBottom: 20 }}>
+            <div className="panel-header">
+              <span className="panel-title">Create journal</span>
+            </div>
+            <div className="panel-body">
+              <div className="form-row">
+                <div className="form-field" style={{ flex: 2 }}>
+                  <label className="form-field-label">Journal name</label>
+                  <input
+                    type="text"
+                    name="journal_name"
+                    className="form-input"
+                    placeholder="Morning Reflection"
+                    value={form.journal_name}
+                    onChange={handleChange}
+                  />
                 </div>
-
-              </form>
-
+                <div className="form-field" style={{ maxWidth: 180 }}>
+                  <label className="form-field-label">Date</label>
+                  <input
+                    type="date"
+                    name="journal_date"
+                    className="form-input"
+                    value={form.journal_date}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-end" }}>
+                  <button
+                    className="btn-primary"
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                  >
+                    {submitting ? "Creating…" : "Create journal"}
+                  </button>
+                </div>
+              </div>
             </div>
-
           </div>
 
-          <div className="card mt-4">
-
-            <div className="card-body">
-
-              <table className="table">
-
+          {/* Table */}
+          <div className="panel">
+            <div className="panel-header">
+              <span className="panel-title">All journals ({journals.length})</span>
+            </div>
+            {journals.length === 0 ? (
+              <p className="state-text">No journals yet.</p>
+            ) : (
+              <table className="data-table">
                 <thead>
-
                   <tr>
-
                     <th>Name</th>
-                    <th>Date</th>
-
+                    <th style={{ width: 160 }}>Date</th>
                   </tr>
-
                 </thead>
-
                 <tbody>
-
-                  {
-                    journals.map(
-                      journal => (
-
-                        <tr
-                          key={
-                            journal._id
-                          }
-                        >
-
-                          <td>
-                            {
-                              journal.journal_name
-                            }
-                          </td>
-
-                          <td>
-                            {
-                              journal.journal_date
-                            }
-                          </td>
-
-                        </tr>
-
-                      )
-                    )
-                  }
-
+                  {journals.map((j) => (
+                    <tr key={j._id}>
+                      <td>{j.journal_name}</td>
+                      <td style={{ color: "#9A8070" }}>{formatDate(j.journal_date)}</td>
+                    </tr>
+                  ))}
                 </tbody>
-
               </table>
-
-            </div>
-
+            )}
           </div>
-
-        </div>
-
+        </main>
       </div>
 
-    </div>
+      {toast && (
+        <Toast msg={toast.msg} type={toast.type} onDone={() => setToast(null)} />
+      )}
+    </>
   );
 };
 

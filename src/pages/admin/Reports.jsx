@@ -1,128 +1,53 @@
 import { useEffect, useState } from "react";
-
-import AdminSidebar
-from "../../components/common/AdminSidebar";
-
-import {
-  getCompletionReport
-} from "../../api/adminApi";
+import AdminSidebar from "../../components/common/AdminSidebar";
+import { getCompletionReport } from "../../api/adminApi";
+import adminStyles from "./adminStyles";
 
 const Reports = () => {
+  const [report, setReport] = useState(null);
 
-  const [report,setReport] =
-    useState(null);
+  useEffect(() => { loadReport(); }, []);
 
-  useEffect(() => {
-
-    loadReport();
-
-  }, []);
-
-  const loadReport =
-    async () => {
-
-      const res =
-        await getCompletionReport();
-
-      setReport(
-        res.data
-      );
-    };
-
-  if (!report)
-    return <h3>Loading...</h3>;
+  const loadReport = async () => {
+    try {
+      const res = await getCompletionReport();
+      setReport(res.data);
+    } catch {}
+  };
 
   return (
+    <>
+      <style>{adminStyles}</style>
+      <div className="admin-root">
+        <AdminSidebar active="reports" />
 
-    <div className="container-fluid">
-
-      <div className="row">
-
-        <div className="col-md-2">
-          <AdminSidebar />
-        </div>
-
-        <div className="col-md-10">
-
-          <h2 className="mt-3">
-            Study Report
-          </h2>
-
-          <div className="row mt-4">
-
-            <div className="col-md-4">
-
-              <div className="card">
-
-                <div className="card-body">
-
-                  <h5>
-                    Total Users
-                  </h5>
-
-                  <h2>
-                    {
-                      report.total_users
-                    }
-                  </h2>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="col-md-4">
-
-              <div className="card">
-
-                <div className="card-body">
-
-                  <h5>
-                    Completed Users
-                  </h5>
-
-                  <h2>
-                    {
-                      report.completed_users
-                    }
-                  </h2>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="col-md-4">
-
-              <div className="card">
-
-                <div className="card-body">
-
-                  <h5>
-                    Completion %
-                  </h5>
-
-                  <h2>
-                    {
-                      report.completion_percentage
-                    }%
-                  </h2>
-
-                </div>
-
-              </div>
-
-            </div>
-
+        <main className="admin-main">
+          <div className="page-header">
+            <h1 className="page-title">Study Report</h1>
+            <p className="page-subtitle">Assessment completion overview</p>
           </div>
 
-        </div>
-
+          {!report ? (
+            <p className="state-text">Loading…</p>
+          ) : (
+            <div className="stat-grid">
+              <div className="stat-card stat-card-accent">
+                <p className="stat-card-label">Total users</p>
+                <p className="stat-card-value">{report.total_users}</p>
+              </div>
+              <div className="stat-card stat-card-accent">
+                <p className="stat-card-label">Completed users</p>
+                <p className="stat-card-value">{report.completed_users}</p>
+              </div>
+              <div className="stat-card stat-card-accent">
+                <p className="stat-card-label">Completion rate</p>
+                <p className="stat-card-value">{report.completion_percentage}%</p>
+              </div>
+            </div>
+          )}
+        </main>
       </div>
-
-    </div>
+    </>
   );
 };
 

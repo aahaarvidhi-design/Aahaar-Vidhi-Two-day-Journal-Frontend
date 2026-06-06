@@ -1,133 +1,55 @@
-import {
-  useEffect,
-  useState
-} from "react";
-
-import AdminSidebar
-from "../../components/common/AdminSidebar";
-
-import {
-  getDashboard
-} from "../../api/adminApi";
+import { useEffect, useState } from "react";
+import AdminSidebar from "../../components/common/AdminSidebar";
+import { getDashboard } from "../../api/adminApi";
+import adminStyles from "./adminStyles";
 
 const Dashboard = () => {
-
-  const [
-    stats,
-    setStats
-  ] = useState(null);
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
-
     loadDashboard();
-
   }, []);
 
-  const loadDashboard =
-    async () => {
-
-      const res =
-        await getDashboard();
-
-      setStats(
-        res.data
-      );
-    };
-
-  if (!stats)
-    return <h3>Loading...</h3>;
+  const loadDashboard = async () => {
+    try {
+      const res = await getDashboard();
+      setStats(res.data);
+    } catch {}
+  };
 
   return (
+    <>
+      <style>{adminStyles}</style>
+      <div className="admin-root">
+        <AdminSidebar active="dashboard" />
 
-    <div className="container-fluid">
-
-      <div className="row">
-
-        <div className="col-md-2">
-          <AdminSidebar />
-        </div>
-
-        <div className="col-md-10">
-
-          <h2 className="mt-3">
-            Dashboard
-          </h2>
-
-          <div className="row mt-4">
-
-            <div className="col-md-4">
-
-              <div className="card">
-
-                <div className="card-body">
-
-                  <h4>
-                    Users
-                  </h4>
-
-                  <h2>
-                    {
-                      stats.total_users
-                    }
-                  </h2>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="col-md-4">
-
-              <div className="card">
-
-                <div className="card-body">
-
-                  <h4>
-                    Assessments
-                  </h4>
-
-                  <h2>
-                    {
-                      stats.total_assessments
-                    }
-                  </h2>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="col-md-4">
-
-              <div className="card">
-
-                <div className="card-body">
-
-                  <h4>
-                    Journals
-                  </h4>
-
-                  <h2>
-                    {
-                      stats.total_journal_entries
-                    }
-                  </h2>
-
-                </div>
-
-              </div>
-
-            </div>
-
+        <main className="admin-main">
+          <div className="page-header">
+            <h1 className="page-title">Dashboard</h1>
+            <p className="page-subtitle">Overview of platform activity</p>
           </div>
 
-        </div>
-
+          {!stats ? (
+            <p className="state-text">Loading…</p>
+          ) : (
+            <div className="stat-grid">
+              <div className="stat-card stat-card-accent">
+                <p className="stat-card-label">Total users</p>
+                <p className="stat-card-value">{stats.total_users}</p>
+              </div>
+              <div className="stat-card stat-card-accent">
+                <p className="stat-card-label">Assessments</p>
+                <p className="stat-card-value">{stats.total_assessments}</p>
+              </div>
+              <div className="stat-card stat-card-accent">
+                <p className="stat-card-label">Journal entries</p>
+                <p className="stat-card-value">{stats.total_journal_entries}</p>
+              </div>
+            </div>
+          )}
+        </main>
       </div>
-
-    </div>
+    </>
   );
 };
 
