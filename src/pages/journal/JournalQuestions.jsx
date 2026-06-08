@@ -98,24 +98,27 @@ const JournalQuestions = () => {
 
       try {
 
-        await submitJournal({
-          journal_id: journalId,
-          responses
-        });
+      await submitJournal({
+        journal_id: journalId,
+        responses
+      });
 
-        alert(
-          "Journal Submitted Successfully"
-        );
+      alert(
+        "Journal Submitted Successfully"
+      );
 
-        navigate(
-          "/journal/history"
-        );
+      navigate(
+        "/journal/history"
+      );
 
-      } catch {
+    } catch (error) {
 
-        alert(
-          "Submission Failed"
-        );
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.msg ||
+        "Submission Failed";
+
+      alert(message);
       }
     };
 

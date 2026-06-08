@@ -67,6 +67,7 @@ const JournalHome = () => {
         <div className="container mt-5">
           <h3>Loading...</h3>
         </div>
+
       </>
 
     );
@@ -122,6 +123,26 @@ const JournalHome = () => {
                       {journal.journal_date}
                     </p>
 
+                    {
+                      journal.attempts > 0 && (
+
+                        <div
+                          className="mb-3"
+                        >
+
+                          <span
+                            className="badge bg-success"
+                          >
+                            Submitted {
+                              journal.attempts
+                            } time(s)
+                          </span>
+
+                        </div>
+
+                      )
+                    }
+
                     <button
                       className="btn btn-primary"
                       onClick={() =>
@@ -130,7 +151,11 @@ const JournalHome = () => {
                         )
                       }
                     >
-                      Start Journal
+                      {
+                        journal.attempts > 0
+                          ? "Retake Journal"
+                          : "Start Journal"
+                      }
                     </button>
 
                   </div>

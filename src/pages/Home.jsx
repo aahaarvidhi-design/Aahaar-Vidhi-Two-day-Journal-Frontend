@@ -236,7 +236,7 @@ const styles = `
 const Home = () => {
   const navigate = useNavigate();
   const [assessment, setAssessment] = useState(null);
-  const [journals, setJournals] = useState(null);
+  const [journals, setJournals] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -249,9 +249,19 @@ const Home = () => {
     } catch {}
 
     try {
-      const journalRes = await getCurrentJournal();
-      setJournals(journalRes.data);
-    } catch {}
+
+    const journalRes =
+      await getCurrentJournal();
+
+    setJournals(
+      journalRes.data || []
+    );
+
+    } catch {
+
+    setJournals([]);
+
+    }
   };
 
   return (
@@ -299,23 +309,17 @@ const Home = () => {
           </div>
 
           {/* Today's Journal */}
+
           <div>
-            <p className="section-title">Today's Journal</p>
+
+            <p className="section-title">
+              Today's Journal
+            </p>
+
             <div className="plain-card">
-              <div className="plain-card-header">
-                <div className="card-icon-box icon-amber">📓</div>
-                <div>
-                  <p className="plain-card-title">
-                    {journals && journals.length > 0 ? journals[0].journal_name : "No journal available"}
-                  </p>
-                  {journals && journals.length > 0 && (
-                    <p className="plain-card-sub">Today's reflection</p>
-                  )}
-                </div>
-              </div>
 
               {
-                journals.length > 0 ? (
+                journals && journals.length > 0 ? (
 
                   journals.map(journal => (
 
@@ -344,20 +348,50 @@ const Home = () => {
 
                       </div>
 
-                      <button
-                        className="plain-btn"
-                        onClick={() =>
-                          navigate(
-                            `/journal/questions/${journal._id}`
-                          )
+                      {
+                        journal.attempts > 0 ? (
+
+                          <>
+                            <div className="mb-2">
+
+                              <span className="badge bg-success">
+                                Submitted {journal.attempts} time(s)
+                              </span>
+
+                            </div>
+
+                            <button
+                              className="btn btn-warning"
+                              onClick={() =>
+                                navigate(
+                                  `/journal/questions/${journal._id}`
+                                )
+                              }
+                            >
+                              Retake Journal ↺
+                            </button>
+
+                          </>
+
+                        ) : (
+
+                          <button
+                            className="plain-btn"
+                            onClick={() =>
+                              navigate(
+                                `/journal/questions/${journal._id}`
+                              )
+                            }
+                          >
+                            Start Journal →
+                          </button>
+
+                        )
                         }
-                      >
-                        Start journal →
-                      </button>
 
                     </div>
 
-                  ))
+                  ))  
 
                 ) : (
 
@@ -367,7 +401,9 @@ const Home = () => {
 
                 )
               }
+
             </div>
+
           </div>
 
         </div>
