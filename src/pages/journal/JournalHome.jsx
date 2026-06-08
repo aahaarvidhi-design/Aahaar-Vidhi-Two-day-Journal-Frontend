@@ -19,19 +19,23 @@ const JournalHome = () => {
   const navigate =
     useNavigate();
 
-  const [journal,setJournal] =
-    useState(null);
+  const [
+    journals,
+    setJournals
+  ] = useState([]);
 
-  const [loading,setLoading] =
-    useState(true);
+  const [
+    loading,
+    setLoading
+  ] = useState(true);
 
   useEffect(() => {
 
-    loadJournal();
+    loadJournals();
 
   }, []);
 
-  const loadJournal =
+  const loadJournals =
     async () => {
 
       try {
@@ -39,13 +43,13 @@ const JournalHome = () => {
         const res =
           await getCurrentJournal();
 
-        setJournal(
-          res.data
+        setJournals(
+          res.data || []
         );
 
       } catch {
 
-        setJournal(null);
+        setJournals([]);
 
       } finally {
 
@@ -53,8 +57,20 @@ const JournalHome = () => {
       }
     };
 
-  if (loading)
-    return <h3>Loading...</h3>;
+  if (loading) {
+
+    return (
+
+      <>
+        <Navbar />
+
+        <div className="container mt-5">
+          <h3>Loading...</h3>
+        </div>
+      </>
+
+    );
+  }
 
   return (
 
@@ -68,7 +84,7 @@ const JournalHome = () => {
         </h2>
 
         {
-          !journal ?
+          journals.length === 0 ?
 
           (
 
@@ -84,42 +100,45 @@ const JournalHome = () => {
 
           (
 
-            <div
-              className="card shadow mt-4"
-            >
+            journals.map(
+              journal => (
 
-              <div
-                className="card-body"
-              >
-
-                <h3>
-                  {
-                    journal.journal_name
-                  }
-                </h3>
-
-                <p>
-                  Date:
-                  {" "}
-                  {
-                    journal.journal_date
-                  }
-                </p>
-
-                <button
-                  className="btn btn-primary"
-                  onClick={() =>
-                    navigate(
-                      `/journal/questions/${journal._id}`
-                    )
-                  }
+                <div
+                  key={journal._id}
+                  className="card shadow mt-4"
                 >
-                  Start Journal
-                </button>
 
-              </div>
+                  <div
+                    className="card-body"
+                  >
 
-            </div>
+                    <h4>
+                      {journal.journal_name}
+                    </h4>
+
+                    <p>
+                      Date:
+                      {" "}
+                      {journal.journal_date}
+                    </p>
+
+                    <button
+                      className="btn btn-primary"
+                      onClick={() =>
+                        navigate(
+                          `/journal/questions/${journal._id}`
+                        )
+                      }
+                    >
+                      Start Journal
+                    </button>
+
+                  </div>
+
+                </div>
+
+              )
+            )
 
           )
         }

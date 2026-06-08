@@ -236,7 +236,7 @@ const styles = `
 const Home = () => {
   const navigate = useNavigate();
   const [assessment, setAssessment] = useState(null);
-  const [journal, setJournal] = useState(null);
+  const [journals, setJournals] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -250,7 +250,7 @@ const Home = () => {
 
     try {
       const journalRes = await getCurrentJournal();
-      setJournal(journalRes.data);
+      setJournals(journalRes.data);
     } catch {}
   };
 
@@ -306,26 +306,67 @@ const Home = () => {
                 <div className="card-icon-box icon-amber">📓</div>
                 <div>
                   <p className="plain-card-title">
-                    {journal ? journal.journal_name : "No journal available"}
+                    {journals && journals.length > 0 ? journals[0].journal_name : "No journal available"}
                   </p>
-                  {journal && (
+                  {journals && journals.length > 0 && (
                     <p className="plain-card-sub">Today's reflection</p>
                   )}
                 </div>
               </div>
 
-              {journal ? (
-                <button
-                  className="plain-btn"
-                  onClick={() =>
-                    navigate(`/journal/questions/${journal._id}`)
-                  }
-                >
-                  Start journal →
-                </button>
-              ) : (
-                <p className="empty-text">Check back later for today's journal.</p>
-              )}
+              {
+                journals.length > 0 ? (
+
+                  journals.map(journal => (
+
+                    <div
+                      key={journal._id}
+                      className="mb-3"
+                    >
+
+                      <div className="plain-card-header">
+
+                        <div className="card-icon-box icon-amber">
+                          📓
+                        </div>
+
+                        <div>
+
+                          <p className="plain-card-title">
+                            {journal.journal_name}
+                          </p>
+
+                          <p className="plain-card-sub">
+                            Today's reflection
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                      <button
+                        className="plain-btn"
+                        onClick={() =>
+                          navigate(
+                            `/journal/questions/${journal._id}`
+                          )
+                        }
+                      >
+                        Start journal →
+                      </button>
+
+                    </div>
+
+                  ))
+
+                ) : (
+
+                  <p className="empty-text">
+                    No journal available today.
+                  </p>
+
+                )
+              }
             </div>
           </div>
 
